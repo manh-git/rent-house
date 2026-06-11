@@ -101,11 +101,11 @@ export default function LoginScreen() {
         <View style={styles.divider} />
       </View>
 
-      {/*<GoogleSignInButton 
+      <GoogleSignInButton 
         onSuccess={handleGoogleSuccess} 
         onError={() => Alert.alert('Lỗi', 'Google Sign-in thất bại')}
         loading={googleLoading}
-      />*/}
+      />
 
       <TouchableOpacity onPress={handleRegister}>
         <Text style={styles.link}>Chưa có tài khoản? Đăng ký</Text>
