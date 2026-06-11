@@ -1,0 +1,277 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Roles {
+  role_id   Int     @id @default(autoincrement())
+  role_name String  @unique
+  users     Users[]
+}
+
+model Users {
+  user_id               Int                @id @default(autoincrement())
+  role_id               Int
+  full_name             String?
+  phone                 String?
+  email                 String             @unique
+  password_hash         String
+  avatar_url            String?
+  is_verified           Boolean            @default(false)
+  is_active             Boolean            @default(true)
+  created_at            DateTime           @default(now())
+  admin_logs            AdminLogs[]
+  contracts             Contracts[]
+  conversations1        Conversations[]    @relation("User1")
+  conversations2        Conversations[]    @relation("User2")
+  messages_sent         Messages[]
+  reports_sent          Reports[]
+  rooms_owned           Rooms[]            @relation("OwnerRooms")
+  role                  Roles              @relation(fields: [role_id], references: [role_id])
+  last_seen             DateTime?
+  roommate_requests     RoommateRequests[] @relation("UserRoommateRequests")
+  signatures Signatures[]
+  notifications Notifications[]
+  wallet Wallets?
+}
+
+model Rooms {
+  room_id           Int                @id @default(autoincrement())
+  owner_id          Int
+  address_id        Int
+  original_price    Decimal?
+  is_rented         Boolean             @default(false)
+  discount_price    Decimal?
+  forecast_price    Decimal?
+  update_at         DateTime           @default(now())
+  visits            Int                @default(0)
+  avg_rating        Decimal?
+  contracts         Contracts[]
+  posts             Posts?
+  features          RoomFeatures?
+  owner             Users              @relation("OwnerRooms", fields: [owner_id], references: [user_id])
+  roommate_requests RoommateRequests[] @relation("RoomRoommateRequests")
+  address           Addresses          @relation(fields: [address_id], references: [address_id])
+}
+
+model Addresses {
+  address_id Int     @id @default(autoincrement())
+  ward_id    Int
+  detail     String
+  lat        Decimal
+  lng        Decimal
+
+  ward  Wards   @relation(fields: [ward_id], references: [ward_id])
+  rooms Rooms[]
+}
+
+model Wards {
+  ward_id   Int    @id @default(autoincrement())
+  ward_name String
+
+  addresses         Addresses[]
+  roommate_requests RoommateRequests[]
+}
+
+model Posts {
+  post_id    Int      @id @default(autoincrement())
+  room_id    Int      @unique
+  title      String?
+  content    String?
+  post_type  String?
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+  media      Media[]
+  room       Rooms    @relation(fields: [room_id], references: [room_id])
+}
+
+model RoomFeatures {
+  feature_id                Int      @id @default(autoincrement())
+  room_id                   Int      @unique
+  area_size                 Decimal?
+  has_wifi                  Boolean  @default(false)
+  has_air_con               Boolean  @default(false)
+  has_parking               Boolean  @default(false)
+  distance_to_center        Decimal?
+  neighborhood_safety_score Int?
+  updated_at                DateTime @default(now())
+  bedrooms                  Int?
+  bathrooms                 Int?
+  furnished                 Boolean?
+  floors                    Int?
+  has_balcony               Boolean?
+  room                      Rooms    @relation(fields: [room_id], references: [room_id])
+}
+
+model Conversations {
+  conv_id         Int        @id @default(autoincrement())
+  user1_id        Int
+  user2_id        Int
+  last_message_at DateTime   @default(now())
+  updated_at      DateTime   @default(now())
+  user1           Users      @relation("User1", fields: [user1_id], references: [user_id])
+  user2           Users      @relation("User2", fields: [user2_id], references: [user_id])
+  messages        Messages[]
+
+  @@unique([user1_id, user2_id])
+}
+
+model Messages {
+  msg_id       Int           @id @default(autoincrement())
+  conv_id      Int
+  sender_id    Int
+  message_text String?
+  sent_at      DateTime      @default(now())
+  updated_at   DateTime      @default(now())
+  media        Media[]
+  is_read      Boolean       @default(false)
+  conversation Conversations @relation(fields: [conv_id], references: [conv_id])
+  sender       Users         @relation(fields: [sender_id], references: [user_id])
+}
+
+model Media {
+  media_id   Int       @id @default(autoincrement())
+  post_id    Int?
+  message_id Int?
+  file_url   String
+  file_type  String
+  created_at DateTime  @default(now())
+  updated_at DateTime  @default(now())
+  message    Messages? @relation(fields: [message_id], references: [msg_id])
+  post       Posts?    @relation(fields: [post_id], references: [post_id])
+}
+
+
+
+model RoommateRequests {
+  request_id       Int      @id @default(autoincrement())
+  sender_id        Int
+  title            String   @default("Tiêu đề mặc định")
+  room_id          Int?
+  preferred_gender String?
+  min_age          Int?
+  ward_id          Int?
+  max_age          Int?
+  budget           Decimal?
+  habits           String?
+  status           String   @default("pending")
+  created_at       DateTime @default(now())
+  updated_at       DateTime @default(now())
+
+  sender Users  @relation("UserRoommateRequests", fields: [sender_id], references: [user_id])
+  room   Rooms? @relation("RoomRoommateRequests", fields: [room_id], references: [room_id])
+  ward   Wards? @relation(fields: [ward_id], references: [ward_id])
+
+  @@unique([sender_id, room_id])
+}
+
+model Reports {
+  report_id   Int      @id @default(autoincrement())
+  sender_id   Int
+  target_type String
+  target_id   Int?
+  reason      String?
+  status      String   @default("pending")
+  updated_at  DateTime @default(now())
+  sender      Users    @relation(fields: [sender_id], references: [user_id])
+}
+
+model AdminLogs {
+  log_id         Int      @id @default(autoincrement())
+  admin_id       Int
+  action_type    String
+  target_id      Int?
+  action_details String?
+  created_at     DateTime @default(now())
+  updated_at     DateTime @default(now())
+  admin          Users    @relation(fields: [admin_id], references: [user_id])
+}
+
+model Contracts {
+  contract_id      Int       @id @default(autoincrement())
+  tenant_id        Int       // Người thuê
+  room_id          Int       
+  start_date       DateTime
+  end_date         DateTime?
+  monthly_rent     Decimal?
+  deposit_amount   Decimal?
+  draft_data     Json?
+  status           String?   // 'pending_tenant', 'pending_signature', 'active', 'completed', 'cancelled'
+  owner_confirmed  Boolean   @default(false)
+  tenant_confirmed Boolean   @default(false)
+  contract_url     String?   
+  deposit_paid            Boolean   @default(false)
+  deposit_transaction_id  String?  
+  deposit_paid_at         DateTime? // Thời điểm khách thanh toán
+  escrow_status           String    @default("pending") // 'holding' (đang giữ), 'released' (đã giải ngân cho chủ), 'refunded'
+  escrow_release_date     DateTime? // Thời điểm tiền được phép giải ngân cho chủ trọ
+  reason_cancel           String?
+  cancelled_by_user_id Int?
+  updated_at          DateTime @default(now()) @updatedAt
+  created_at       DateTime  @default(now())
+  payments         Payments[]
+  room             Rooms     @relation(fields: [room_id], references: [room_id])
+  tenant           Users     @relation(fields: [tenant_id], references: [user_id])
+  signatures       Signatures[]
+  withdrawalRequest WithdrawalRequests?
+}
+
+model Payments {
+  payment_id     Int       @id @default(autoincrement())
+  contract_id    Int
+  amount         Decimal
+  payment_method String?   // 'vnpay'
+  transaction_id String?   // Mã tham chiếu từ VNPay
+  status         String?   // 'completed', 'refunded'
+  paid_at        DateTime? @default(now())
+  
+  contract       Contracts @relation(fields: [contract_id], references: [contract_id])
+}
+
+
+model Signatures {
+  signature_id Int       @id @default(autoincrement())
+  contract_id  Int
+  user_id      Int
+  signed_at    DateTime  @default(now())
+  signature_ip String    // Lưu IP để tăng tính pháp lý
+  contract     Contracts @relation(fields: [contract_id], references: [contract_id])
+  user         Users     @relation(fields: [user_id], references: [user_id])
+
+}
+model Wallets {
+  wallet_id Int     @id @default(autoincrement())
+  owner_id  Int     @unique
+  balance   Decimal @default(0)
+  owner     Users   @relation(fields: [owner_id], references: [user_id])
+}
+model Notifications {
+  notif_id   Int      @id @default(autoincrement())
+  user_id    Int
+  type       String   // contract_invite, contract_signed, deposit_received, message, ...
+  title      String
+  body       String
+  data       Json?    // payload tuỳ loại thông báo
+  is_read    Boolean  @default(false)
+  created_at DateTime @default(now())
+  user       Users    @relation(fields: [user_id], references: [user_id])
+}
+
+model WithdrawalRequests {
+  withdrawal_id Int      @id @default(autoincrement())
+  contract_id   Int      @unique // Mỗi hợp đồng chỉ có 1 yêu cầu giải ngân cọc
+  owner_id      Int
+  bank_name     String
+  account_number String
+  account_holder String
+  amount        Decimal
+  status        String   @default("pending") // 'pending', 'processed'
+  created_at    DateTime @default(now())
+  
+  contract      Contracts @relation(fields: [contract_id], references: [contract_id])
+}
+
