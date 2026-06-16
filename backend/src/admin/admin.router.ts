@@ -23,4 +23,8 @@ router.get('/logs',authorize(3,5), AdminController.getAdminLogs);
 router.get('/withdrawals', authorize(3,5), AdminController.getWithdrawalList);
 router.put('/withdrawal/status', authorize(3,5), AdminController.updateWithdrawal);
 
+router.post('/reports/list', authorize(3,5),AdminController.getListReport); // Lấy danh sách báo cáo
+router.put('/report/:reportId/read', authorize(3,5), AdminController.markReportAsRead); // Đánh dấu đã đọc
+router.post('/notifications/send',authorize(3,5), AdminController.sendSystemNotification); 
+router.get('/report/:reportId',authorize(3,5), AdminController.getReportById); 
 export default router;

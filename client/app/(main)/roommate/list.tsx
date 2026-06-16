@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
-  View, Text, FlatList, TouchableOpacity, ActivityIndicator,
+  View, Text, FlatList, TouchableOpacity, ActivityIndicator, Image,
   StyleSheet, Modal, TextInput, Alert, ScrollView, Platform, SafeAreaView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -114,10 +114,18 @@ function RoommateCard({
                 onPress={() => {
               router.push(`/profile/${item.sender_id}` as any);
             }}>
+        <View style={styles.avatar}> 
+          {item?.sender.avatar_url ? (
+    <Image 
+      source={{ uri: item?.sender.avatar_url }} 
+      style={{ width: '100%', height: '100%', borderRadius: 32 }} 
+    />
+  ) :(
         <View style={[styles.avatar, { backgroundColor: avatarColor.bg }]}>
           <Text style={[styles.avatarText, { color: avatarColor.text }]}>
             {getInitials(name)}
           </Text>
+        </View>)}
         </View>
         </TouchableOpacity>
         <View style={styles.senderInfo}>

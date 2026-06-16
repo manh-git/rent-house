@@ -319,18 +319,7 @@ const proceedCancel = async () => {
   </View>
 ) : null}
 
-        {/* PDF link */}
-        {contract.contract_url && (
-          <View style={styles.section}>
-            <TouchableOpacity
-              style={styles.pdfBtn}
-              onPress={() => Linking.openURL(contract.contract_url)}
-            >
-              <Ionicons name="document-outline" size={18} color="#4F46E5" />
-              <Text style={styles.pdfBtnText}>Xem hợp đồng PDF</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+        
 
         {/* ── ACTION BUTTONS ─────────────────────────────────── */}
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Platform, DeviceEventEmitter } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, usePathname } from 'expo-router';
 import { useAuth } from '@/store/authStore';
@@ -24,10 +25,15 @@ export function AppFooter({ notificationCount = 0, messageCount = 0 }: FooterPro
   const router = useRouter();
   const { user } = useAuth();
 
+  const insets = useSafeAreaInsets();
   // State quản lý số lượng tin nhắn chưa đọc để nhảy số Real-time ngay tại Footer
   const [liveMessageCount, setLiveMessageCount] = useState(messageCount);
   const socketRef = useRef<any>(null);
-  
+  const [liveNotifCount, setLiveNotifCount] = useState(notificationCount);
+
+  useEffect(() => {
+    setLiveNotifCount(notificationCount);
+  }, [notificationCount]);
   // Dùng Ref lưu pathname nhằm tránh scope của Socket bị đóng băng (Stale Closure)
   const pathnameRef = useRef(pathname);
   useEffect(() => {
@@ -36,7 +42,7 @@ export function AppFooter({ notificationCount = 0, messageCount = 0 }: FooterPro
 
   // Hàm gọi API đồng bộ con số unread chuẩn xác nhất từ Prisma DB
   const refreshUnreadCount = async () => {
-    const userId = user?.id || user?.user_id;
+    const userId = user?.id;
     if (!userId) return;
     try {
       const res = await getUnreadCountAPI();
@@ -55,15 +61,21 @@ export function AppFooter({ notificationCount = 0, messageCount = 0 }: FooterPro
 
   // 2. Tự động đồng bộ lại từ DB bất cứ khi nào người dùng chuyển đổi qua lại giữa các tab
   useEffect(() => {
-    const userId = user?.id || user?.user_id;
+    const userId = user?.id;
     if (userId) {
       refreshUnreadCount();
     }
   }, [user?.id, pathname]);
-
-  // 3. 🔌 KẾT HỢP SOCKET: Lắng nghe và tự động đẩy số nhảy lập tức khi có tin nhắn đến
   useEffect(() => {
-    const userId = user?.id || user?.user_id;
+  const listener = DeviceEventEmitter.addListener('notification_read', () => {
+    setLiveNotifCount(prev => Math.max(0, prev - 1));
+  });
+  return () => listener.remove();
+}, []);
+
+  // 3.KẾT HỢP SOCKET: Lắng nghe và tự động đẩy số nhảy lập tức khi có tin nhắn đến
+  useEffect(() => {
+    const userId = user?.id ;
     
     if (!userId) return;
     
@@ -75,7 +87,6 @@ export function AppFooter({ notificationCount = 0, messageCount = 0 }: FooterPro
         if (!isMounted || !sock) return;
         socketRef.current = sock;
 
-        // Xóa sạch sự kiện cũ để tránh lặp bộ lắng nghe (gây nhân đôi số badge)
         sock.off('receive_notification');
         
         sock.on('receive_notification', (msg: any) => {
@@ -83,7 +94,7 @@ export function AppFooter({ notificationCount = 0, messageCount = 0 }: FooterPro
 
           
           const incomingSenderId = Number(msg?.sender_id || msg?.senderId);
-          const currentUserId = Number(user?.id || user?.user_id);
+          const currentUserId = Number(user?.id );
 
           // Nếu tin nhắn do chính mình gửi đi thì bỏ qua
           if (incomingSenderId === currentUserId) return;
@@ -92,7 +103,7 @@ export function AppFooter({ notificationCount = 0, messageCount = 0 }: FooterPro
           const isInsideChatDetail = pathnameRef.current.includes('/message/detail');
 
           if (!isInsideChatDetail) {
-            console.log("🔥 Đang ở ngoài màn chat -> Tăng tạm thời UI và đồng bộ hóa DB!");
+            console.log("Đang ở ngoài màn chat -> Tăng tạm thời UI và đồng bộ hóa DB!");
             
             // Bước 1: Cho state nhảy số lập tức hiển thị lên màn hình (Optimistic Update)
             setLiveMessageCount(prev => prev + 1);
@@ -103,6 +114,11 @@ export function AppFooter({ notificationCount = 0, messageCount = 0 }: FooterPro
             }, 600);
           }
         });
+        if (sock) {
+      sock.on('new_notification', (notif: any) => {
+        setLiveNotifCount(prev => prev + 1);
+      });
+    }
 
       } catch (error) {
         console.error("[Footer Socket Error]:", error);
@@ -127,7 +143,7 @@ export function AppFooter({ notificationCount = 0, messageCount = 0 }: FooterPro
 
   // Hàm map số lượng Badge tương ứng lên từng ô Tab chân trang
   const getBadge = (route: string) => {
-    if (route === '/notification') return notificationCount;
+    if (route === '/notification') return liveNotifCount;
     if (route === '/message/list') return liveMessageCount; // Sử dụng state liveMessageCount đã được đồng bộ
     return 0;
   };
@@ -143,8 +159,7 @@ export function AppFooter({ notificationCount = 0, messageCount = 0 }: FooterPro
   });
 
   return (
-    <SafeAreaView style={styles.footerSafe}>
-      <View style={styles.footerContainer}>
+      <View style={[styles.footerContainer, { paddingBottom: insets.bottom }]}>
         {visibleTabItems.map((tab) => {
           const active = isActive(tab.route);
           const badge = getBadge(tab.route);
@@ -177,7 +192,6 @@ export function AppFooter({ notificationCount = 0, messageCount = 0 }: FooterPro
           );
         })}
       </View>
-    </SafeAreaView>
   );
 }
 

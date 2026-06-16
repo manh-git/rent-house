@@ -55,3 +55,27 @@ export const updateWithdrawalAPI = async (withdrawalId: number, status: string) 
   const res = await API.put('/admin/withdrawal/status', { withdrawalId, status });
   return res.data;
 };
+export const getListReportsAPI = async (index = 0, count = 10, status?: string) => {
+  const res = await API.post('/admin/reports/list', { index, count, status });
+  return res.data;
+};
+export const markReportAsReadAPI = async (reportId: number) => {
+  const res = await API.put(`/admin/report/${reportId}/read`, {});
+  return res.data;
+};
+
+export const sendSystemNotificationAPI = async (
+  userIds: number[], 
+  title: string, 
+  body: string, 
+  data: any = {}
+) => {
+  const res = await API.post('/admin/notifications/send', { 
+    userIds, 
+    title, 
+    body, 
+    data 
+  });
+  return res.data;
+};
+

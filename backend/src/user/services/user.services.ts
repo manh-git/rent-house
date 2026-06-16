@@ -6,6 +6,8 @@ import { sendResetPasswordEmail, confirmAccount } from '../../utils/mailer.util.
 import redis from '../../utils/redis.util.js';
 import { UpdateUserDto } from '../dto/UpdateUser.dto.js';
 import { OAuth2Client } from 'google-auth-library';
+import { createReportDto } from '../dto/createReport.dto.js';
+import { createNotification } from '../../notification/notification.service.js';
 
 const prisma = new PrismaClient();
 
@@ -300,3 +302,65 @@ export const findUser = async(key: string)=>{
 }
 
 //viết báo cáo 
+export const createReport = async (dto: createReportDto, userId: number) => {
+    if (!userId) {
+        throw new Error('Không gửi mã userId');
+    }
+
+    const user = await prisma.users.findFirst({
+        where: { user_id: Number(userId) },
+    });
+    if (!user) {
+        throw new Error('Người dùng không tồn tại.');
+    }
+
+    const { target_type, target_id, reason } = dto;
+    let subjectName = 'Lỗi ứng dụng'
+    // 1. Kiểm tra logic theo loại target_type
+    if (target_type === 'app') {
+        // Nếu là APP thì không được gửi target_id
+        if (target_id) {
+            throw new Error('Báo cáo lỗi ứng dụng không được phép kèm theo target_id');
+        }
+    } else {
+        if (!target_id) {
+            throw new Error(`Báo cáo ${target_type} bắt buộc phải có target_id`);
+        }
+
+        if (target_type === 'post') {
+            const roomExists = await prisma.posts.findUnique({ where: { post_id: target_id }, select:{title: true} });
+            if (!roomExists) throw new Error('Phòng không tồn tại');
+            subjectName = roomExists?.title || 'Bài đăng không xác định!'
+        } else if (target_type === 'user') {
+            const targetUserExists = await prisma.users.findUnique({ where: { user_id: target_id }, select: {full_name: true} });
+            if (!targetUserExists) throw new Error('Người dùng bị báo cáo không tồn tại');
+            subjectName = user?.full_name || 'Người dùng không xác định';
+        }
+    }
+
+    // 2. Lưu báo cáo vào DB
+    const newReport = await prisma.reports.create({
+        data: {
+            sender_id: userId,
+            target_type,
+            target_id: target_type === 'app' ? null : (target_id ?? null), 
+            reason,
+        }
+    });
+
+    await createNotification({
+        user_id: userId,
+    type: 'create report',
+    title: 'Tạo báo cáo thành công',
+    body: `1.Loại báo cáo: ${target_type}\n2. Lý do: ${reason}\n3. Chủ thể bị báo cáo: ${subjectName}`,
+    })
+
+    
+
+    return {
+        code: 1000,
+        message: 'OK',
+        data: newReport
+    }
+};
+

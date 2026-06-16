@@ -142,6 +142,7 @@ const handleDelete = () => {
   user?.id && 
   post?.room?.owner_id && 
   String(user.id) === String(post.room.owner_id);
+  const isAdmin = user?.role ===3 || user?.role ===5;
 
   if (loading) {
     return (
@@ -350,7 +351,7 @@ const handleDelete = () => {
                   <Text style={styles.ownerPhone}>{post.room.owner.phone}</Text>
                 )}
               </View>
-              {!isOwner && (
+              {(!isOwner && !isAdmin)  && (
                 <TouchableOpacity
                   style={styles.chatBtn}
                   onPress={handleStartChat}

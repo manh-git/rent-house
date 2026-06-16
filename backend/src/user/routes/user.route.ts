@@ -19,5 +19,6 @@ router.get('/getUserInfor', authenticate, UserController.getUserInfor);
 //google
 router.post('/google', UserController.loginGoogle);
 
+router.post('/createReport', authenticate, UserController.createReport);
 router.get('/findUser', authenticate, UserController.findUser);
 export default router;

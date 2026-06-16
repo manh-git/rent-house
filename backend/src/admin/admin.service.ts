@@ -438,5 +438,95 @@ export const searchUsers = async (index: number, count: number, key?: string) =>
         }
     };
 };
-//lấy danh sách báo cáo
-//gửi thông báo bất kỳ cho người dùng
+// Lấy danh sách báo cáo
+export const getListReport = async (index: number, count: number, status?: string) => {
+    const where = status ? { status } : {};
+    
+    const [reports, total] = await Promise.all([
+        prisma.reports.findMany({
+            where,
+            skip: index * count,
+            take: count,
+            orderBy: { created_at: 'desc' },
+            include: { sender: { select: { full_name: true, email: true } } }
+        }),
+        prisma.reports.count({ where })
+    ]);
+
+    return {
+        code: 1000,
+        data: reports,
+        pagination: { total, index, count, totalPages: Math.ceil(total / count) }
+    };
+};
+
+// Đánh dấu đã đọc báo cáo (Chỉ cần 1 admin đọc)
+export const markReportAsRead = async (adminId: number, reportId: number) => {
+    const report = await prisma.reports.findUnique({ where: { report_id: reportId } });
+    if (!report) throw new Error('Báo cáo không tồn tại!');
+
+    return await prisma.$transaction(async (tx) => {
+        // Cập nhật trạng thái báo cáo
+        const updated = await tx.reports.update({
+            where: { report_id: reportId },
+            data: { status: 'resolved' }
+        });
+
+        // Ghi log admin
+        await tx.adminLogs.create({
+            data: {
+                admin_id: adminId,
+                action_type: 'Đánh dấu báo cáo đã đọc',
+                action_details: `Admin đã xử lý/đọc báo cáo #${reportId}`,
+                target_id: reportId
+            }
+        });
+        return updated;
+    });
+};
+//gửi thông báo bất kỳ cho người 
+export const sendSystemNotification = async (
+    userIds: number[], 
+    title: string, 
+    body: string, 
+    data: any = {}
+) => {
+    let targetUsers: { user_id: number }[];
+
+    if (userIds.length > 0) {
+        // Gửi cho danh sách cụ thể
+        targetUsers = userIds.map(id => ({ user_id: id }));
+    } else {
+        // Gửi cho tất cả ngoại trừ admin (role 3 và 5)
+        const allUsers = await prisma.users.findMany({
+            where: {
+                NOT: {
+                    role_id: { in: [3, 5] }
+                }
+            },
+            select: { user_id: true }
+        });
+        targetUsers = allUsers;
+    }
+
+    const notifications = targetUsers.map(u => ({
+        user_id: u.user_id,
+        type: 'system_announcement',
+        title,
+        body,
+        data
+    }));
+
+    return await prisma.notifications.createMany({
+        data: notifications
+    });
+};
+
+export const getReportById = async (reportId: number) => {
+  const report = await prisma.reports.findUnique({
+    where: { report_id: reportId },
+    include: { sender: { select: { full_name: true, email: true } } },
+  });
+  if (!report) throw new Error('Báo cáo không tồn tại!');
+  return { code: 1000, data: report };
+};

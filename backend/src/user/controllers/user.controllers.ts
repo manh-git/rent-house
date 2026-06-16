@@ -70,6 +70,7 @@ export const logout = async (req: Request, res: Response) => {
 //làm mới accesstoken
 export const refreshToken = async (req: Request, res: Response) => {
   try {
+    console.log('refresh')
     const refreshToken = req.cookies?.refreshToken;
     if (!refreshToken) {
       res.status(401).json({ code: 401, message: 'Không tìm thấy refresh token' });
@@ -86,6 +87,7 @@ export const refreshToken = async (req: Request, res: Response) => {
 
     res.status(200).json({ code: 200, accessToken });
   } catch (error: any) {
+    console.error(error)
     res.status(401).json({ code: 401, message: error.message });
   }
 };
@@ -207,6 +209,20 @@ export const findUser = async(req: Request, res: Response)=>{
     const query = await UserService.findUser(key);
     res.json(query);
   }catch(e){
+    res.status(400).json({message: e});
+  }
+}
+export const createReport = async(req:Request, res:Response)=>{
+  try{
+    const userId = (req as any).user?.userId;
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+}
+    const query = await UserService.createReport(req.body, userId);
+    res.json(query);
+
+  } catch(e){
+    console.error(e)
     res.status(400).json({message: e});
   }
 }

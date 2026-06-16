@@ -1,8 +1,9 @@
 import { Stack, useRouter, useSegments, useRootNavigationState } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/store/authStore';
+import { StyleSheet, Platform, KeyboardAvoidingView } from 'react-native';
 import { connectSocket, disconnectSocket } from '@/utils/socket'; // 💡 IMPORT 2 HÀM NÀY
-
+import { ReportFAB } from '@/components/ReportFAB';
 export default function RootLayout() {
   const { isLoggedIn, checkAuth, getUserInfor, user } = useAuth(); // Lấy thêm object user ra nếu cần
   const segments = useSegments();
@@ -63,7 +64,7 @@ useEffect(() => {
 
   const inAuthGroup = segments[0] === 'auth';
   const inAdminGroup = segments[0] === 'admin'; // Sửa lại: vì folder bạn là 'admin'
-
+  const isPostDetail = segments[1] === 'post';
   const timeout = setTimeout(() => {
     if (!isLoggedIn ) {
       if(!inAuthGroup)
@@ -73,8 +74,10 @@ useEffect(() => {
       if ( inAuthGroup) {
       router.replace('/');
     }
-    else if (isAdmin && !inAdminGroup) {
-      router.replace('/admin'); // Dùng tên folder admin
+    else if (isAdmin) {
+      if (segments.length === 0 || (!inAdminGroup && !isPostDetail)) {
+          router.replace('/admin');
+        }
     }
     else if (inAdminGroup && !isAdmin) {
       router.replace('/');
@@ -88,6 +91,12 @@ useEffect(() => {
   }
   
   return (
+    <KeyboardAvoidingView 
+      style={styles.container} 
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      // keyboardVerticalOffset giúp tránh trường hợp bị che mất header hoặc phần trên cùng
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0} 
+    >
     <Stack
       screenOptions={{
         headerStyle: { backgroundColor: '#f4511e' },
@@ -102,6 +111,14 @@ useEffect(() => {
       <Stack.Screen name="auth/register" options={{ title: 'Đăng ký' }} />
       <Stack.Screen name="profile/update-infor" options={{ title: 'Thay đổi thông tin' }} />
       <Stack.Screen name="admin" />
+      
     </Stack>
+    {isLoggedIn && !isAdmin && <ReportFAB />}
+    </KeyboardAvoidingView>
   );
 }
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});

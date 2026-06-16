@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, StyleSheet, Modal, TextInput, Alert, ScrollView, Platform } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, StyleSheet, Modal, TextInput, Alert, ScrollView, Platform, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { updateRoommateAPI, deleteRoommateAPI } from '@/store/roommate.service';
 import { Picker } from '@react-native-picker/picker';
@@ -78,11 +78,19 @@ function RoommateCard({
     <View style={styles.card}>
       {/* Header */}
       <View style={styles.cardHeader}>
-        <View style={[styles.avatar, { backgroundColor: avatarColor.bg }]}>
-          <Text style={[styles.avatarText, { color: avatarColor.text }]}>
-            {getInitials(name)}
-          </Text>
-        </View>
+        <View style={styles.avatar}> 
+                  {item?.sender.avatar_url ? (
+            <Image 
+              source={{ uri: item?.sender.avatar_url }} 
+              style={{ width: '100%', height: '100%', borderRadius: 32 }} 
+            />
+          ) :(
+                <View style={[styles.avatar, { backgroundColor: avatarColor.bg }]}>
+                  <Text style={[styles.avatarText, { color: avatarColor.text }]}>
+                    {getInitials(name)}
+                  </Text>
+                </View>)}
+                </View>
         <View style={styles.senderInfo}>
           <Text style={styles.senderName} numberOfLines={1}>{name}</Text>
           <View style={styles.timeRow}>

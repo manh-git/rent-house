@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import * as RoomService from '../services/room.services.js'
-import { error } from "console";
 
 //thêm sửa xóa phòng
 export const createRooms = async(req: Request, res:Response)=>{

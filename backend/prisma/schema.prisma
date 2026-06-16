@@ -176,9 +176,12 @@ model Reports {
   target_id   Int?
   reason      String?
   status      String   @default("pending")
-  updated_at  DateTime @default(now())
+  updated_at  DateTime @default(now())   @updatedAt
+  created_at  DateTime @default(now())
   sender      Users    @relation(fields: [sender_id], references: [user_id])
 }
+
+
 
 model AdminLogs {
   log_id         Int      @id @default(autoincrement())

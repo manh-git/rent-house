@@ -21,14 +21,15 @@ interface Post {
       detail: string;
       ward: { ward_name: string };
     };
-  };
-  media: { file_url: string }[];
-  created_at: string;
-  owner: {
+    owner: {
     user_id: number;
     full_name: string;
     avatar_url: string | null;
   }
+  };
+  media: { file_url: string }[];
+  created_at: string;
+  
 }
 export function PostCard({ post, onPress }: { post: Post; onPress: () => void }) {
   
@@ -57,7 +58,7 @@ export function PostCard({ post, onPress }: { post: Post; onPress: () => void })
       <View style={styles.headerRow}>
         <View style={styles.ownerInfo}>
           <View style={styles.avatar}>
-            {post.owner?.avatar_url ? (
+            {post.room.owner?.avatar_url ? (
               <Image source={{ uri: post.room?.owner?.avatar_url }} style={{ width: '100%', height: '100%' }} />
             ) : (
               <Text style={styles.avatarText}>{post.room?.owner?.full_name?.charAt(0) || 'U'}</Text>

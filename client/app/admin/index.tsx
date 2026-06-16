@@ -56,6 +56,8 @@ export default function AdminDashboard() {
     { label: 'Yêu cầu rút tiền', icon: 'wallet', route: '/admin/withdrawals', color: '#F59E0B', bg: '#FFFBEB' },
     { label: 'Nhật ký hệ thống', icon: 'document-text', route: '/admin/logs', color: '#10B981', bg: '#ECFDF5' },
     { label: 'Quản lý tìm roommate', icon: 'pencil', route: '/admin/roommate', color: '#b910b6', bg: '#ECFDF5' },
+    { label: 'Quản lý báo cáo', icon: 'book', route: '/admin/reports', color: '#b6b910', bg: '#ECFDF5' },
+
   ];
 
   return (

@@ -191,7 +191,7 @@ const owner = post.room?.owner || post.room.owner;
           {isRented && (
             
       <View style={styles.rentedDot} >
-      <text>Đã cho thuê</text>
+      <Text>Đã cho thuê</Text>
       </View>
     )}
       </View>

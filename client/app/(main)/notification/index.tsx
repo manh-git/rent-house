@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import {
-  View, Text, FlatList, TouchableOpacity, StyleSheet,
-  SafeAreaView, Platform, ActivityIndicator, RefreshControl,
+  View, Text, FlatList, TouchableOpacity, StyleSheet, DeviceEventEmitter,
+  SafeAreaView, Platform, ActivityIndicator, RefreshControl, Modal
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -68,6 +68,8 @@ export default function NotificationScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
+  const [selectedNotif, setSelectedNotif] = useState<Notification | null>(null);
+
   const fetchNotifs = useCallback(async () => {
     try {
       const res = await getNotificationsAPI();
@@ -97,8 +99,9 @@ export default function NotificationScreen() {
 
   const handlePress = async (item: Notification) => {
     
-    if (!item.data.is_read) {
+    if (!item.is_read) {
     await markOneReadAPI(item.notif_id);
+    DeviceEventEmitter.emit('notification_read');
     setNotifications(prev =>
       prev.map(n => n.notif_id === item.notif_id ? { ...n, is_read: true } : n)
     );
@@ -106,13 +109,19 @@ export default function NotificationScreen() {
   }
 
 
-  let data = item.data;
-  if (typeof data === 'string') {
-    try { data = JSON.parse(data); } catch { data = {}; }
-  }
 
-  console.log(data.contract_id);
-    
+  let data = {};
+  if (item.data) {
+    try {
+      data = typeof item.data === 'string' ? JSON.parse(item.data) : item.data;
+    } catch (e) {
+      console.error("Lỗi parse data:", e);
+    }
+  }
+    const hasPath = data?.contract_id || data?.conv_id || data?.post_id;
+    if(!hasPath){
+      setSelectedNotif(item);
+    } else{
 
   
     if (item.type === 'escrow_action_required' && data?.contract_id) {
@@ -127,6 +136,7 @@ export default function NotificationScreen() {
     } else if (item.data?.post_id) {
       router.push(`/post/${item.data.post_id}` as any);
     }
+  }
 
   };
 
@@ -152,6 +162,18 @@ export default function NotificationScreen() {
           </TouchableOpacity>
         )}
       </View>
+
+      <Modal visible={!!selectedNotif} transparent animationType="fade" onRequestClose={() => setSelectedNotif(null)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>{selectedNotif?.title}</Text>
+            <Text style={styles.modalBody}>{selectedNotif?.body}</Text>
+            <TouchableOpacity style={styles.closeBtn} onPress={() => setSelectedNotif(null)}>
+              <Text style={styles.closeBtnText}>Đóng</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       {loading ? (
         <View style={styles.loadingBox}>
@@ -211,4 +233,19 @@ const styles = StyleSheet.create({
   separator: { height: 1, backgroundColor: '#F3F4F6' },
   emptyBox: { alignItems: 'center', paddingTop: 80, gap: 12 },
   emptyText: { fontSize: 15, color: '#9CA3AF' },
+  modalOverlay: { 
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', 
+    justifyContent: 'center', padding: 20 
+  },
+  modalContent: { 
+    backgroundColor: '#fff', borderRadius: 16, padding: 24,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25, shadowRadius: 4, elevation: 5 
+  },
+  modalTitle: { fontSize: 18, fontWeight: '700', marginBottom: 12, color: '#111' },
+  modalBody: { fontSize: 15, color: '#4B5563', lineHeight: 22, marginBottom: 24 },
+  closeBtn: { 
+    backgroundColor: '#4F46E5', paddingVertical: 12, borderRadius: 8, alignItems: 'center' 
+  },
+  closeBtnText: { color: '#fff', fontWeight: '600' },
 });

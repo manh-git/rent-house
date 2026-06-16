@@ -1,7 +1,7 @@
 import React, {  useState, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
- ActivityIndicator,
+ ActivityIndicator, Image,
   SafeAreaView, 
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -39,7 +39,7 @@ const getAvatarColor = (name: string) => AVATAR_COLORS[(name?.charCodeAt(0) ?? 0
 const getInitials = (name: string) => name?.split(' ').slice(-2).map(w => w[0]).join('').toUpperCase() ?? '?';
 const formatMoney = (val: string | number) => {
   const n = Number(val);
-  return n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1).replace('.0', '')}tr` : `${n.toLocaleString('vi-VN')}đ`;
+  return n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1).replace('.0', '')}triệu` : `${n.toLocaleString('vi-VN')}đ`;
 };
 const formatDate = (d: string) => new Date(d).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
@@ -54,7 +54,7 @@ const CONTRACT_STATUS: Record<string, { label: string; bg: string; text: string;
 function ContractCard({ contract, isOwner }: { contract: Contract; isOwner: boolean }) {
   const status = CONTRACT_STATUS[contract.status] || CONTRACT_STATUS.pending;
   const otherPerson = isOwner ? contract.tenant : undefined;
-
+  const fullAddress = contract.room?.address?.detail || 'Địa chỉ không xác định';
   return (
     <View style={styles.contractCard}>
       <View style={[styles.contractIcon, { backgroundColor: status.bg }]}>
@@ -62,7 +62,7 @@ function ContractCard({ contract, isOwner }: { contract: Contract; isOwner: bool
       </View>
       <View style={styles.contractBody}>
         <Text style={styles.contractTitle} numberOfLines={1}>
-          {contract.room?.address?.detail ? contract.room.address.detail.split(',')[0] : `Hợp đồng #${contract.contract_id}`}
+          {fullAddress}
           {otherPerson ? ` – ${otherPerson.full_name}` : ''}
         </Text>
         <Text style={styles.contractSub}>{formatDate(contract.start_date)} → {formatDate(contract.end_date)}</Text>
@@ -90,7 +90,7 @@ export default function ProfileScreen() {
     try {
       // 1. Fetch Hợp đồng
       const contractRes = await API.get('/contract/my-list').catch(() => ({ data: [] }));
-      const rawData = contractRes.data?.data; // Truy cập vào object data của response
+      const rawData = contractRes.data?.data; 
       const contractList = rawData?.all || []; // Lấy mảng 'all'
       
       setContracts(contractList);
@@ -125,9 +125,20 @@ export default function ProfileScreen() {
         {/* Profile Card */}
         <View style={styles.profileCardWrap}>
           <View style={styles.profileCard}>
-            <View style={[styles.avatar, styles.avatarFallback, { backgroundColor: avatarColor.bg }]}>
-              <Text style={[styles.avatarText, { color: avatarColor.text }]}>{getInitials(user?.name ?? 'U')}</Text>
-            </View>
+            <View style={styles.avatar}>
+  {user?.avatarUrl ? (
+    <Image 
+      source={{ uri: user.avatarUrl }} 
+      style={{ width: '100%', height: '100%', borderRadius: 32 }} 
+    />
+  ) : (
+    <View style={[styles.avatar, styles.avatarFallback, { backgroundColor: avatarColor.bg }]}>
+      <Text style={[styles.avatarText, { color: avatarColor.text }]}>
+        {getInitials(user?.name ?? 'U')}
+      </Text>
+    </View>
+  )}
+</View>
             <View style={styles.profileInfo}>
               <Text style={styles.profileName}>{user?.name ?? 'Người dùng'}</Text>
               <Text style={styles.roleTagText}>{isOwner ? 'Chủ trọ' : 'Người thuê'}</Text>
