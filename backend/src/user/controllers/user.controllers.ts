@@ -70,7 +70,6 @@ export const logout = async (req: Request, res: Response) => {
 //làm mới accesstoken
 export const refreshToken = async (req: Request, res: Response) => {
   try {
-    console.log('refresh')
     const refreshToken = req.cookies?.refreshToken;
     if (!refreshToken) {
       res.status(401).json({ code: 401, message: 'Không tìm thấy refresh token' });

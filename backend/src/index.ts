@@ -1,4 +1,4 @@
-import 'dotenv/config';
+//import 'dotenv/config';
 import express, { Request, Response } from 'express';
 import cookieParser from 'cookie-parser';
 import { createServer } from 'http';
@@ -23,7 +23,7 @@ const app = express();
 const httpServer = createServer(app);
 
 app.use(cors({
-  origin: 'http://localhost:8081', // Phải khớp chính xác với URL của Expo Web
+  origin: process.env.CLIENT_URL||'http://localhost:8081', // Phải khớp chính xác với URL của Expo Web
   credentials: true,               // Cho phép gửi cookie/header xác thực
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -48,6 +48,9 @@ cron.schedule('0 0 * * *', async () => {
   await checkExpiredCancelContracts();
 });
 
+checkExpiredCancelContracts().catch((err) =>
+  console.error('Lỗi check expired contracts khi start:', err),
+);
 
 app.use('/user', userRouters);
 app.use('/roommate', roommateRouters);

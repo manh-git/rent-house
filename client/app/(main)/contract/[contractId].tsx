@@ -11,7 +11,7 @@ import {
   getContractAPI, tenantConfirmAPI, requestSignOTPAPI,
   signContractAPI, createPaymentUrlAPI, cancelContractAPI,
 } from '@/store/contract.service';
-
+import { WebView } from 'react-native-webview';
 const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> = {
   draft:            { label: 'Nháp', color: '#6B7280', bg: '#F3F4F6' },
   pending_tenant:   { label: 'Chờ người thuê xác nhận', color: '#F59E0B', bg: '#FFFBEB' },
@@ -127,18 +127,47 @@ export default function ContractDetailScreen() {
     }
   };
 
+  const [showPaymentWebView, setShowPaymentWebView] = useState(false);
+  const [paymentUrl, setPaymentUrl] = useState('');
+
   const handlePay = async () => {
     try {
       setPaying(true);
       const res = await createPaymentUrlAPI(Number(contractId));
       const url = res.data?.paymentUrl;
-      if (url) await Linking.openURL(url);
+      if (url) {
+      setPaymentUrl(url);
+      setShowPaymentWebView(true);
+    }
     } catch (err: any) {
       Alert.alert('Lỗi', err?.response?.data?.message || 'Tạo link thanh toán thất bại!');
     } finally {
       setPaying(false);
     }
   };
+
+  const handlePaymentNavStateChange = (navState: { url: string }) => {
+  if (navState.url.includes('/contract/vnpay-return')) {
+    setShowPaymentWebView(false);
+
+    const queryString = navState.url.split('?')[1] || '';
+    const query: Record<string, string> = {};
+    queryString.split('&').forEach((pair) => {
+      const [key, value] = pair.split('=');
+      if (key) query[decodeURIComponent(key)] = decodeURIComponent(value || '');
+    });
+
+    const responseCode = query['vnp_ResponseCode'];
+
+    if (responseCode === '00') {
+      Alert.alert('Thành công', 'Thanh toán tiền cọc thành công!');
+    } else {
+      Alert.alert('Thất bại', 'Thanh toán không thành công hoặc đã bị hủy.');
+    }
+
+    fetchContract(); // load lại trạng thái hợp đồng (deposit_paid, status...)
+  }
+};
 
   const handleCancel = () => {
   setShowCancelModal(true); // Hiển thị Modal để người dùng nhập lý do
@@ -339,7 +368,7 @@ const proceedCancel = async () => {
               >
                 {confirming
                   ? <ActivityIndicator color="#fff" />
-                  : <Text style={styles.actionBtnText}>✅ Xác nhận hợp đồng</Text>}
+                  : <Text style={styles.actionBtnText}>Xác nhận hợp đồng</Text>}
               </TouchableOpacity>
             </View>
           </View>
@@ -365,7 +394,7 @@ const proceedCancel = async () => {
                 >
                   {sendingOtp
                     ? <ActivityIndicator color="#fff" />
-                    : <Text style={styles.actionBtnText}>📧 Nhận OTP để ký</Text>}
+                    : <Text style={styles.actionBtnText}> Nhận OTP để ký</Text>}
                 </TouchableOpacity>
               ) : (
                 <View style={styles.otpBox}>
@@ -393,7 +422,7 @@ const proceedCancel = async () => {
                     >
                       {signing
                         ? <ActivityIndicator color="#fff" />
-                        : <Text style={styles.actionBtnText}>✍️ Ký hợp đồng</Text>}
+                        : <Text style={styles.actionBtnText}>Ký hợp đồng</Text>}
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -461,6 +490,27 @@ const proceedCancel = async () => {
 </Modal>
 
         <View style={{ height: 32 }} />
+        <Modal visible={showPaymentWebView} animationType="slide">
+  <SafeAreaView style={{ flex: 1 }}>
+    <View style={styles.webviewHeader}>
+      <TouchableOpacity onPress={() => setShowPaymentWebView(false)}>
+        <Ionicons name="close" size={26} color="#111" />
+      </TouchableOpacity>
+      <Text style={styles.webviewTitle}>Thanh toán VNPay</Text>
+      <View style={{ width: 26 }} />
+    </View>
+    <WebView
+      source={{ uri: paymentUrl }}
+      onNavigationStateChange={handlePaymentNavStateChange}
+      startInLoadingState
+      renderLoading={() => (
+        <View style={styles.loadingBox}>
+          <ActivityIndicator size="large" color="#8B5CF6" />
+        </View>
+      )}
+    />
+  </SafeAreaView>
+</Modal>
       </ScrollView>
     </SafeAreaView>
   );
@@ -607,4 +657,10 @@ cancelledBanner: {
     color: '#B91C1C',
     fontWeight: '600',
   },
+  webviewHeader: {
+  flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+  paddingHorizontal: 16, paddingVertical: 12,
+  borderBottomWidth: 1, borderBottomColor: '#F3F4F6',
+},
+webviewTitle: { fontSize: 16, fontWeight: '700', color: '#111' },
 });

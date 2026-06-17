@@ -64,7 +64,6 @@ export const sendContractEmail = async (to: string, data: any) => {
     contract_signed: `
       <h2>Hợp đồng đã được ký kết!</h2>
       <p>Hợp đồng #${data.contractId} đã được cả hai bên ký kết thành công.</p>
-      <p><a href="${data.pdfUrl}">Tải hợp đồng PDF tại đây</a></p>
     `,
     deposit_received: `
       <h2>Xác nhận nhận tiền cọc</h2>

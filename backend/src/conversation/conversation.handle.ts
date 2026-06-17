@@ -63,7 +63,7 @@ export const registerChatHandlers = (io: Server, socket: Socket) => {
     }
   });
 
-  // 💡 SỰ KIỆN ĐÁNH DẤU ĐÃ XEM CHỦ ĐỘNG
+  //  SỰ KIỆN ĐÁNH DẤU ĐÃ XEM CHỦ ĐỘNG
   socket.on('read_messages', async (data: { convId: number }) => {
     if (!data.convId || isNaN(data.convId)) return;
     try {
@@ -163,9 +163,6 @@ io.to(`user_${targetReceiverId}`).emit('receive_notification', msgPayload);
 
       socket.emit('message_sent', msgPayload);
 
-      // 💡 SỬA LỖI TẠI ĐÂY:
-      // Nếu đối phương đang KHÔNG ở trong phòng chat (offline hoặc ở màn hình khác),
-      // ta bắt buộc phải ghi xuống PostgreSQL ngay lập tức để khi họ click vào chat sẽ đọc được từ API luôn.
       if (bufferCount >= FLUSH_THRESHOLD || isNewConversation || !isReceiverInRoom) {
         await flushToDB(convId);
       }
@@ -178,13 +175,15 @@ io.to(`user_${targetReceiverId}`).emit('receive_notification', msgPayload);
 
   // ─── DISCONNECT ────────────────────────────────────────────────────
   socket.on('disconnect', async () => {
-    await setUserOffline(userId);
-    await prisma.users.update({
-      where: { user_id: userId },
-      data: { last_seen: new Date() },
-    });
-    socket.broadcast.emit('user_status_changed', { userId, status: 'offline' });
+  const wasRemoved = await setUserOffline(userId, socket.id);
+  await prisma.users.update({
+    where: { user_id: userId },
+    data: { last_seen: new Date() },
   });
+  if (wasRemoved) {
+    socket.broadcast.emit('user_status_changed', { userId, status: 'offline' });
+  }
+});
 };
 
 // ─── FLUSH BUFFER VÀO POSTGRESQL ───────────────────────────────────────────

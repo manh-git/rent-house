@@ -365,6 +365,7 @@ export default function ChatScreen() {
     fetchMessages(page + 1, false);
   }, [hasMore, loadingMore, loading, page, fetchMessages]);
 
+  
   const renderMessage = useCallback(
     ({ item, index }: { item: Message; index: number }) => {
       const isMe = item.sender_id === user?.id;
@@ -382,6 +383,7 @@ export default function ChatScreen() {
         allImages = item.image_urls;
       }
 
+      console.log(isOnline)
       const hasImages = allImages.length > 0;
 
       return (

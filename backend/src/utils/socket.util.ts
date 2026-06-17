@@ -1,6 +1,6 @@
 import redis from './redis.util.js';
 
-const ONLINE_TTL = 60 * 5; // 5 phút
+const ONLINE_TTL = 60 * 60*24; // 5 phút
 
 // Lưu user online
 export const setUserOnline = async (userId: number, socketId: string) => {
@@ -8,8 +8,13 @@ export const setUserOnline = async (userId: number, socketId: string) => {
 };
 
 // Xóa user online
-export const setUserOffline = async (userId: number) => {
-  await redis.del(`online:${userId}`);
+export const setUserOffline = async (userId: number, socketId: string): Promise<boolean> => {
+  const currentSocketId = await redis.get(`online:${userId}`);
+  if (currentSocketId === socketId) {
+    await redis.del(`online:${userId}`);
+    return true;
+  }
+  return false;
 };
 
 // Kiểm tra user có online không

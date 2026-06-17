@@ -3,7 +3,6 @@ import crypto from 'crypto';
 import redis from '../utils/redis.util.js';
 import { createVNPayUrl, verifyVNPayReturn } from '../utils/vnpay.util.js';
 import { sendContractEmail } from '../utils/mailer.util.js';
-import { generateContractPDF } from '../utils/pdf.util.js';
 import { getVNPayMessage } from '../utils/vnpay.util.js';
 import { createNotification } from '../notification/notification.service.js';
 const prisma = new PrismaClient();
@@ -224,14 +223,13 @@ export const signContract = async (
   const tenantSigned = signatures.some(s => s.user_id === contract.tenant_id);
 
   if (ownerSigned && tenantSigned) {
-    const pdfUrl = await generateContractPDF(contract);
     await prisma.contracts.update({
       where: { contract_id: contractId },
-      data: { status: 'signed', contract_url: pdfUrl },
+      data: { status: 'signed' },
     });
 
-    await sendContractEmail(contract.room.owner.email, { type: 'contract_signed', contractId, pdfUrl });
-    await sendContractEmail(contract.tenant.email, { type: 'contract_signed', contractId, pdfUrl });
+    await sendContractEmail(contract.room.owner.email, { type: 'contract_signed', contractId});
+    await sendContractEmail(contract.tenant.email, { type: 'contract_signed', contractId });
     
     return { code: 1000, message: 'Ký thành công! Hợp đồng đã có hiệu lực.' };
   } else {

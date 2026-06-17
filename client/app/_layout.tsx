@@ -2,7 +2,7 @@ import { Stack, useRouter, useSegments, useRootNavigationState } from 'expo-rout
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/store/authStore';
 import { StyleSheet, Platform, KeyboardAvoidingView } from 'react-native';
-import { connectSocket, disconnectSocket } from '@/utils/socket'; // 💡 IMPORT 2 HÀM NÀY
+import { connectSocket, disconnectSocket } from '@/utils/socket'; // IMPORT 2 HÀM NÀY
 import { ReportFAB } from '@/components/ReportFAB';
 export default function RootLayout() {
   const { isLoggedIn, checkAuth, getUserInfor, user } = useAuth(); // Lấy thêm object user ra nếu cần

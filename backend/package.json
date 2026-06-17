@@ -1,8 +1,8 @@
 {
   "type": "module",
   "scripts": {
-    "dev": "prisma generate && nodemon --exec \"npx tsx src/index.ts\" --watch src --ext ts",
-    "build": "tsc",
+    "dev": "prisma generate && nodemon --exec \"node --env-file=.env --import tsx src/index.ts\" --watch src --ext ts",
+    "build": "prisma generate && tsc",
     "start": "node dist/index.js"
   },
   "dependencies": {
@@ -20,14 +20,13 @@
     "express": "^5.2.1",
     "google-auth-library": "^10.6.2",
     "handlebars": "^4.7.9",
-    "ioredis": "^5.10.1",
+    "ioredis": "^5.11.1",
     "jsonwebtoken": "^9.0.3",
     "mailer": "^0.6.7",
     "multer": "^2.1.1",
     "node-cron": "^4.2.1",
     "nodemailer": "^8.0.6",
     "pg": "^8.20.0",
-    "puppeteer": "^25.1.0",
     "qs": "^6.15.2",
     "reflect-metadata": "^0.2.2",
     "socket.io": "^4.8.3",

@@ -143,7 +143,7 @@ const handleDelete = () => {
   post?.room?.owner_id && 
   String(user.id) === String(post.room.owner_id);
   const isAdmin = user?.role ===3 || user?.role ===5;
-
+  const rented = post?.room?.is_rented;
   if (loading) {
     return (
       <View style={styles.loadingBox}>
@@ -172,7 +172,10 @@ const handleDelete = () => {
         {/* Nút sửa/xóa — chỉ hiện cho chủ bài */}
         {isOwner && (
           <View style={styles.headerActions}>
-            <TouchableOpacity
+
+            {rented && (
+              <View>
+              <TouchableOpacity
               style={[styles.headerBtn, styles.editBtn]}
               
               onPress={() => {
@@ -190,6 +193,7 @@ const handleDelete = () => {
             >
               <Ionicons name="medical-outline" size={20} color="#4F46E5" />
             </TouchableOpacity>
+            </View>)}
             <TouchableOpacity
               style={[styles.headerBtn, styles.editBtn]}
               onPress={() => {
