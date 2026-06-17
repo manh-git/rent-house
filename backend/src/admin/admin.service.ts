@@ -310,7 +310,7 @@ export const updateWithdrawalStatus = async (adminId: number, withdrawalId: numb
             await tx.payments.create({
                 data: {
                     contract_id: withdrawal.contract_id,
-                    amount: -Math.abs(withdrawal.amount) , // Ghi âm để thể hiện tiền đi ra
+                    amount: -Math.abs(withdrawal.amount) ,
                     payment_method: 'bank_transfer',
                     transaction_id: `REFUND_${withdrawalId}_${Date.now()}`,
                     status: 'refunded',

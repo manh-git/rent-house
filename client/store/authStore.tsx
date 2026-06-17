@@ -30,14 +30,14 @@ interface AuthState {
   checkAuth: () => Promise<void>;
   getUserInfor: () => Promise<void>;
   updateUserInfor: (data: any) => Promise<any>;
-  clearSession: () => Promise<void>; // Sửa kiểu trả về thành Promise<void> cho chuẩn logic dọn dẹp
+  clearSession: () => Promise<void>; 
 }
 
 const getBaseURL = () => {
   if (Platform.OS === 'web') {
-    return 'http://localhost:3000'; // Dành cho trình duyệt
+    return ' https://rent-house-h3hl.onrender.com'; 
   }
-  return 'https://wildcard-euphemism-repeater.ngrok-free.dev'; // Dành cho giả lập Android
+  return ' https://rent-house-h3hl.onrender.com'; 
 };
 
 export const API = axios.create({
@@ -62,7 +62,7 @@ API.interceptors.request.use(
   }
 );
 
-// ── RESPONSE INTERCEPTOR ──────────────────────────────────────────────
+
 // ── RESPONSE INTERCEPTOR ──────────────────────────────────────────────
 let isRefreshing = false;
 let failedQueue: Array<{ resolve: (token: string) => void; reject: (err: any) => void }> = [];

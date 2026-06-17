@@ -27,9 +27,9 @@ interface Post {
 const getPostsAdminAPI = async (key = '', page = 0, limit = 10) => {
   const res = await API.get('/post_room/getlistpost', {
     params: {
-      search: key,  // ← đổi từ key sang search
-      index: page,  // ← đổi từ page sang index
-      count: limit, // ← đổi từ limit sang count
+      search: key, 
+      index: page,  
+      count: limit, 
     },
   });
   return res.data;

@@ -1,4 +1,4 @@
-import axios from 'axios';
+
 import { API } from './authStore';
 
 export const getMessagesAPI = async (convId: number, page: number, limit: number = 20) => {
