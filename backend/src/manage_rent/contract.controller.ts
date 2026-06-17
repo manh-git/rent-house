@@ -95,7 +95,7 @@ export const createDepositPaymentUrl = async (req: Request, res: Response) => {
     const tenantId = (req as any).user.userId;
     
     const contractId = Number(req.params.contractId);
-    const result = await ContractService.createDepositPaymentUrl(contractId, tenantId, finalIp);
+    const result = await ContractService.createDepositPaymentUrl(contractId, tenantId, finalIp!);
     res.status(200).json(result);
     
   } catch (err: any) {

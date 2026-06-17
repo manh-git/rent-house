@@ -23,7 +23,7 @@ const hmacSHA512 = (data: string): string => {
 // Sắp xếp object theo key alphabet
 const sortObject = (obj: Record<string, string>) => {
   const sorted: Record<string, string> = {};
-  Object.keys(obj).sort().forEach(key => { sorted[key] = obj[key]; });
+  Object.keys(obj).sort().forEach(key => { sorted[key] = obj[key] ||""; });
   return sorted;
 };
 

@@ -48,32 +48,8 @@ export const openUser = async(userId: number, targetId: number, actionDetail:str
     })
     return { code: 1000, message: "Đã mở lại tài khoản thành công." };
 }
-//xóa review
-export const deleteReview = async(userId: number, targetId: number, actionDetail: string, type: number)=>{
-
-    const user = await prisma.users.findUnique({
-        where: {user_id: targetId},
-    })
-    if(!user)throw new Error('Người dùng không tồn tại!');
 
 
-    if(type === 1){
-    await prisma.userReviews.delete({
-        where: {u_review_id: targetId},
-    })}
-    else await prisma.roomReviews.delete({
-        where: {review_id: targetId},
-    })
-
-    await prisma.adminLogs.create({
-        data: {
-            action_type: 'Mở lại tài khoản',
-            action_details: actionDetail ?? 'Không rõ lý do!',
-            admin_id: userId,
-            target_id: targetId
-        }
-    })
-}
 //xóa bài đăng
 export const deletePostRoom = async(userId: number, postId: number, room_id: number,actionDetail: string)=>{
     const user = await prisma.users.findUnique({
@@ -334,7 +310,7 @@ export const updateWithdrawalStatus = async (adminId: number, withdrawalId: numb
             await tx.payments.create({
                 data: {
                     contract_id: withdrawal.contract_id,
-                    amount: -Math.abs(withdrawal.amount), // Ghi âm để thể hiện tiền đi ra
+                    amount: -Math.abs(withdrawal.amount) , // Ghi âm để thể hiện tiền đi ra
                     payment_method: 'bank_transfer',
                     transaction_id: `REFUND_${withdrawalId}_${Date.now()}`,
                     status: 'refunded',
