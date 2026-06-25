@@ -7,8 +7,8 @@ import Cookies from 'js-cookie';
 
 const BASE_URL =
   Platform.OS === 'web'
-    ? 'https://rent-house-h3hl.onrender.com'
-    : 'https://rent-house-h3hl.onrender.com';
+    ? 'http://localhost:3000'
+    : 'https://wildcard-euphemism-repeater.ngrok-free.dev';
 
 // ── SINGLETON ─────────────────────────────────────────────────────────────────
 let socket: Socket | null = null;

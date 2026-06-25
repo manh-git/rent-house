@@ -23,10 +23,10 @@ const app = express();
 const httpServer = createServer(app);
 
 app.use(cors({
-  origin: process.env.CLIENT_URL||'http://localhost:8081', // Phải khớp chính xác với URL của Expo Web
+  origin: process.env.CLIENT_URL||'http://localhost:8081', 
   credentials: true,               // Cho phép gửi cookie/header xác thực
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization','X-Requested-With']
 }));
 
 export const io = new Server(httpServer, {

@@ -7,7 +7,6 @@ import { verifyOTP, resendOTP } from '@/store/authStore';
 import { useGlobalSearchParams,useRouter } from 'expo-router';
 export default function OTPVerifyScreen() {
   const { userId, email } = useGlobalSearchParams<{ userId: string; email: string }>();
-  console.log("Dữ liệu nhận được:", { userId, email });
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
   const [countdown, setCountdown] = useState(60);

@@ -1,7 +1,9 @@
-import React from 'react';
-import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
+import React, { useEffect } from 'react';
+import { TouchableOpacity, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import * as Google from 'expo-auth-session/providers/google';
+import * as WebBrowser from 'expo-web-browser';
 
-const CLIENT_ID = '309568191271-egevp7ib9h1uel436i3cp6liek6ju1c8.apps.googleusercontent.com';
+WebBrowser.maybeCompleteAuthSession();
 
 interface Props {
   onSuccess: (idToken: string) => void;
@@ -9,25 +11,38 @@ interface Props {
   loading?: boolean;
 }
 
-export default function GoogleSignInButton({ onSuccess, onError }: Props) {
+export default function GoogleSignInButton({ onSuccess, onError, loading }: Props) {
+  const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
+    clientId: '309568191271-egevp7ib9h1uel436i3cp6liek6ju1c8.apps.googleusercontent.com',
+  });
+
+  useEffect(() => {
+    if (response?.type === 'success') {
+      const idToken = response.params.id_token;
+      if (idToken) onSuccess(idToken);
+      else onError('Không lấy được id_token');
+    } else if (response?.type === 'error') {
+      onError(response.error);
+    }
+  }, [response]);
+
   return (
-    <GoogleOAuthProvider clientId={CLIENT_ID}>
-      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
-        <GoogleLogin
-          
-          onSuccess={(credentialResponse) => {
-            console.log("Google Raw Response:", credentialResponse);
-            if (credentialResponse.credential) {
-              onSuccess(credentialResponse.credential);
-            }
-            else {
-      console.error("No credential returned from Google");
-      onError();}
-          }}
-          onError={() => onError()}
-          useOneTap={false}
-        />
-      </div>
-    </GoogleOAuthProvider>
+    <TouchableOpacity
+      style={styles.button}
+      onPress={() => promptAsync()}
+      disabled={!request || loading}
+    >
+      {loading
+        ? <ActivityIndicator color="#374151" />
+        : <Text style={styles.text}>🔵 Đăng nhập với Google</Text>}
+    </TouchableOpacity>
   );
 }
+
+const styles = StyleSheet.create({
+  button: {
+    borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 12,
+    padding: 16, alignItems: 'center', backgroundColor: '#F9FAFB', marginBottom: 24,
+  },
+  text: { fontSize: 16, color: '#374151', fontWeight: '500' },
+});

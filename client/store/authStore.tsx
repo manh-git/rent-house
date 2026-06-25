@@ -35,14 +35,15 @@ interface AuthState {
 
 const getBaseURL = () => {
   if (Platform.OS === 'web') {
-    return ' https://rent-house-h3hl.onrender.com'; 
+    return 'http://localhost:3000'; 
   }
-  return ' https://rent-house-h3hl.onrender.com'; 
+  return 'https://wildcard-euphemism-repeater.ngrok-free.dev'; 
 };
 
 export const API = axios.create({
   baseURL: getBaseURL(),
   withCredentials: true,
+  
 });
 
 // ── REQUEST INTERCEPTOR ───────────────────────────────────────────────
@@ -55,6 +56,9 @@ API.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    if (Platform.OS !== 'web') {
+    config.headers['ngrok-skip-browser-warning'] = 'true';
+   }
     return config;
   },
   (error) => {

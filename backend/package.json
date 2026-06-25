@@ -1,7 +1,7 @@
 {
   "type": "module",
   "scripts": {
-    "dev": "prisma generate && nodemon --exec \"node --env-file=.env --import tsx src/index.ts\" --watch src --ext ts",
+    "dev": "nodemon --exec \"node --env-file=.env --import tsx src/index.ts\" --watch src --ext ts",
     "build": "prisma generate && tsc --noEmitOnError false || exit 0",
     "start": "node dist/index.js"
   },

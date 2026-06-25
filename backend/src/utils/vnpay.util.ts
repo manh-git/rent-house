@@ -82,10 +82,6 @@ export const verifyVNPayReturn = (query: Record<string, string>) => {
 
   const checkHash = hmacSHA512(signData);
 
-  console.log('signData verify:', signData);
-  console.log('checkHash:', checkHash);
-  console.log('secureHash:', secureHash);
-  console.log('match:', checkHash === secureHash);
 
   return {
     isValid: checkHash === secureHash,

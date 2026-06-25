@@ -1,10 +1,10 @@
-import React from 'react';
+// components/GoogleSignInButton/index.native.tsx
+import React, { useEffect } from 'react';
 import { TouchableOpacity, Text, StyleSheet, ActivityIndicator } from 'react-native';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import * as Google from 'expo-auth-session/providers/google';
+import * as WebBrowser from 'expo-web-browser';
 
-GoogleSignin.configure({
-  webClientId: '309568191271-egevp7ib9h1uel436i3cp6liek6ju1c8.apps.googleusercontent.com',
-});
+WebBrowser.maybeCompleteAuthSession();
 
 interface Props {
   onSuccess: (idToken: string) => void;
@@ -13,24 +13,29 @@ interface Props {
 }
 
 export default function GoogleSignInButton({ onSuccess, onError, loading }: Props) {
-  const handlePress = async () => {
-    try {
-      await GoogleSignin.hasPlayServices();
-      const userInfo = await GoogleSignin.signIn();
-      const idToken = userInfo.data?.idToken;
-      if (!idToken) throw new Error('Không lấy được idToken');
-      onSuccess(idToken);
-    } catch (error) {
-      onError(error);
-      console.log(error)
+  const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
+    clientId: '309568191271-egevp7ib9h1uel436i3cp6liek6ju1c8.apps.googleusercontent.com',
+  });
+
+  useEffect(() => {
+    if (response?.type === 'success') {
+      const idToken = response.params.id_token;
+      if (idToken) onSuccess(idToken);
+      else onError('Không lấy được id_token');
+    } else if (response?.type === 'error') {
+      onError(response.error);
     }
-  };
+  }, [response]);
 
   return (
-    <TouchableOpacity style={styles.button} onPress={handlePress} disabled={loading}>
+    <TouchableOpacity
+      style={styles.button}
+      onPress={() => promptAsync()}
+      disabled={!request || loading}
+    >
       {loading
         ? <ActivityIndicator color="#374151" />
-        : <Text style={styles.text}>🔵  Đăng nhập với Google</Text>}
+        : <Text style={styles.text}>🔵 Đăng nhập với Google</Text>}
     </TouchableOpacity>
   );
 }

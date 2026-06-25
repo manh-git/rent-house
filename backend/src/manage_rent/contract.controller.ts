@@ -123,13 +123,11 @@ export const vnpayReturn = async (req: Request, res: Response) => {
 };
 
 export const vnpayIPN = async (req: Request, res: Response) => {
-    console.log('test 2522')
 
   try {
 
     const queryData = req.query || {};
 
-    console.log('Dữ liệu nhận được:', queryData);
     
     const query = queryData as Record<string, string>;
     const result = verifyVNPayReturn(query);

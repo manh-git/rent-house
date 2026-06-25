@@ -173,7 +173,7 @@ const handleDelete = () => {
         {isOwner && (
           <View style={styles.headerActions}>
 
-            {rented && (
+            {!rented && (
               <View>
               <TouchableOpacity
               style={[styles.headerBtn, styles.editBtn]}

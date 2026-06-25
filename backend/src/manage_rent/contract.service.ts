@@ -427,14 +427,12 @@ export const handleVNPayReturn = async (query: Record<string, string>) => {
     data: { success: true, contract: updated.data },
   };
 };
-
 export const checkExpiredCancelContracts = async () => {
   const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
   
-  // Tìm các hợp đồng đã hủy quá 2 ngày
-  const contracts = await prisma.contracts.findMany({
+  const cancelledContracts = await prisma.contracts.findMany({
     where: { 
-      status: 'cancel',
+      status: 'cancelled', 
       deposit_paid: true,
       updated_at: { lte: twoDaysAgo },
       escrow_status: 'holding' 
@@ -442,7 +440,7 @@ export const checkExpiredCancelContracts = async () => {
     include: { room: true }
   });
 
-  for (const contract of contracts) {
+  for (const contract of cancelledContracts) {
     const receiverId = contract.cancelled_by_user_id === contract.tenant_id 
       ? contract.room.owner_id 
       : contract.tenant_id;
@@ -451,9 +449,38 @@ export const checkExpiredCancelContracts = async () => {
       data: {
         user_id: receiverId,
         type: 'escrow_action_required',
-        title: 'Đủ điều kiện nhận tiền cọc',
-        body: `Hợp đồng #${contract.contract_id} đã hết thời gian khiếu nại. Vui lòng điền thông tin ngân hàng để Admin thực hiện thủ tục hoàn cọc/giải ngân.`,
-        data: JSON.stringify({ contract_id: contract.contract_id })
+        title: 'Đủ điều kiện nhận tiền cọc (Hợp đồng hủy)',
+        body: `Hợp đồng #${contract.contract_id} đã kết thúc quá 2 ngày và hết thời gian khiếu nại. Vui lòng điền thông tin ngân hàng để nhận lại/giải ngân tiền cọc.`,
+        data: { contract_id: contract.contract_id }
+      }
+    });
+  }
+
+  
+  const expiredContracts = await prisma.contracts.findMany({
+    where: {
+      status: 'active',           
+      deposit_paid: true,
+      escrow_status: 'holding',   
+      end_date: { lte: twoDaysAgo } 
+    }
+  });
+
+  for (const contract of expiredContracts) {
+    await prisma.contracts.update({
+      where: { contract_id: contract.contract_id },
+      data: { status: 'completed' }
+    });
+
+    const receiverId = contract.tenant_id;
+
+    await prisma.notifications.create({
+      data: {
+        user_id: receiverId,
+        type: 'escrow_action_required',
+        title: 'Hợp đồng hết hạn - Nhận lại tiền cọc',
+        body: `Hợp đồng #${contract.contract_id} của bạn đã hết hạn quá 2 ngày (qua thời gian khiếu nại). Vui lòng cập nhật thông tin tài khoản ngân hàng để nhận lại tiền cọc.`,
+        data: { contract_id: contract.contract_id }
       }
     });
   }

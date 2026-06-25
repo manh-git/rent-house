@@ -327,7 +327,6 @@ const proceedCancel = async () => {
               { label: 'Tiền cọc', value: formatPrice(Number(contract.deposit_amount)) },
               { label: 'Ngày bắt đầu', value: formatDate(contract.start_date) },
               { label: 'Ngày kết thúc', value: contract.end_date ? formatDate(contract.end_date) : 'Không xác định' },
-              { label: 'Đóng tiền hàng tháng', value: `Ngày ${contract.payment_due_day}` },
             ].map((item, i) => (
               <View key={i} style={styles.detailRow}>
                 <Text style={styles.detailLabel}>{item.label}</Text>

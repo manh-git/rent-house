@@ -2,7 +2,7 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet,
   Image, RefreshControl, Modal, ScrollView, TextInput,
-  ActivityIndicator, Pressable,
+  ActivityIndicator, Pressable, KeyboardAvoidingView, Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useRouter } from 'expo-router';
@@ -92,6 +92,10 @@ function FilterModal({
 
   return (
     <Modal visible={visible} animationType="slide" transparent>
+      <KeyboardAvoidingView 
+    style={{ flex: 1 }} 
+    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+  >
       <Pressable style={styles.modalOverlay} onPress={onClose}>
         <Pressable style={styles.modalSheet}>
           <View style={styles.modalHandle} />
@@ -137,6 +141,7 @@ function FilterModal({
           </View>
         </Pressable>
       </Pressable>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
